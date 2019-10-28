@@ -1,7 +1,9 @@
 import logging
 import sys
 from google_api import get_api
-from telegram.ext import run_async, Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import run_async, Updater, CommandHandler, MessageHandler, \
+    Filters
+from telegram import ParseMode
 from config import TOKEN, PORT, HEROKU_APP_NAME, MODE, GOOGLE_FORM_URL
 from multiprocessing import Process
 
@@ -50,10 +52,12 @@ def start(update, context):
 
     start_text = (f'Привет {update.effective_user.first_name}! '
                   'Данный бот поможет Вам понять, готовы ли Вы обучаться '
-                  'на магистерской программе Software Engineering в ИТМО. '
-                  f'Пройдите, пожалуйста, тест в Google Form по ссылке {GOOGLE_FORM_URL}')
+                  'на магистерской программе *Software Engineering* в ИТМО. '
+                  f'Пройдите, пожалуйста, тест в '
+                  f'[Google Form]({GOOGLE_FORM_URL}?entry.1107499763={username}).')
 
-    context.bot.send_message(chat_id=chat_id,
+    context.bot.send_message(parse_mode=ParseMode.MARKDOWN,
+                             chat_id=chat_id,
                              text=start_text)
     data = get_api(username[1:], update.effective_message.date) # Without @
 
