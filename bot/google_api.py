@@ -20,7 +20,7 @@ def rindex(lst, val):
         return -1
 
 
-def get_api(telegram_log):
+def get_api(telegram_log, date_telegram_log):
     scope = ["https://spreadsheets.google.com/feeds",
              'https://www.googleapis.com/auth/spreadsheets',
              "https://www.googleapis.com/auth/drive.file",
