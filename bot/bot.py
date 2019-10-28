@@ -1,7 +1,9 @@
 import logging
 import sys
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from config import TOKEN, PORT, HEROKU_APP_NAME, MODE
+from google_api import get_api
+from telegram.ext import run_async, Updater, CommandHandler, MessageHandler, Filters
+from config import TOKEN, PORT, HEROKU_APP_NAME, MODE, GOOGLE_FORM_URL
+from multiprocessing import Process
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -9,34 +11,37 @@ logger = logging.getLogger()
 
 all_users = {}
 
-def get_api(username):
-    ...
-
 if MODE == "prod":
     def run():
         updater = Updater(TOKEN, use_context=True)
         updater.start_webhook(listen="0.0.0.0",
-                                port=PORT,
-                                url_path=TOKEN)
+                              port=PORT,
+                              url_path=TOKEN)
 
         updater.dispatcher.add_handler(CommandHandler("start", start))
         updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
 
-        updater.bot.set_webhook("https://{}.herokuapp.com/{}".format(HEROKU_APP_NAME, TOKEN))
-else:
+        updater.bot.set_webhook(
+            "https://{}.herokuapp.com/{}".format(HEROKU_APP_NAME, TOKEN))
+elif MODE == "dev":
     def run():
         import requests
         get_request = requests.get('http://pubproxy.com/api/proxy?limit=1&'
-                               'format=txt&port=8080&level=anonymous&'
-                               'type=socks5&country=FI|NO|US&https=True')
-        updater = Updater(TOKEN, use_context=True, request_kwargs={'proxy_url': f'https://{get_request.text}'})
+                                   'format=txt&port=8080&level=anonymous&'
+                                   'type=socks5&country=FI|NO|US&https=True')
+        updater = Updater(TOKEN, use_context=True, request_kwargs={
+                          'proxy_url': f'https://{get_request.text}'})
 
         updater.dispatcher.add_handler(CommandHandler("start", start))
         updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
 
         updater.start_polling()
+else:
+    logger.error('No MODE specified')
+    exit(1)
 
 
+@run_async
 def start(update, context):
     chat_id = update.effective_chat.id
     username = update.effective_user.name
@@ -46,12 +51,13 @@ def start(update, context):
     start_text = (f'Привет {update.effective_user.first_name}! '
                   'Данный бот поможет Вам понять, готовы ли Вы обучаться '
                   'на магистерской программе Software Engineering в ИТМО. '
-                  f'Пройдите, пожалуйста, тест в Google Form по ссылке '
-                  'https://forms.gle/ezkmBjgpUwxFFtyg8')
+                  f'Пройдите, пожалуйста, тест в Google Form по ссылке {GOOGLE_FORM_URL}')
 
-    get_api(username)
     context.bot.send_message(chat_id=chat_id,
                              text=start_text)
+    data = get_api(username[1:]) # Without @
+
+    context.bot.send_message(chat_id=chat_id, text=data)
 
 
 def echo(update, context):
