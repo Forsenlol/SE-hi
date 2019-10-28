@@ -55,7 +55,7 @@ def start(update, context):
 
     context.bot.send_message(chat_id=chat_id,
                              text=start_text)
-    data = get_api(username[1:]) # Without @
+    data = get_api(username[1:], update.effective_message.date) # Without @
 
     context.bot.send_message(chat_id=chat_id, text=data)
 
