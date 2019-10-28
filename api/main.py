@@ -1,8 +1,10 @@
 from pprint import pprint
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
+import os
+import json
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_API_TOKEN = os.getenv("GOOGLE_API_TOKEN")
 
 def main():
     scope = ["https://spreadsheets.google.com/feeds",
@@ -10,7 +12,7 @@ def main():
              "https://www.googleapis.com/auth/drive.file",
              "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.\
-        from_json_keyfile_dict(GOOGLE_API_KEY, scope)
+        from_json_keyfile_dict(json.loads(GOOGLE_API_TOKEN), scope)
     client = gspread.authorize(creds)
     sheet = client.open("Tests").sheet1
 
