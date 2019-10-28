@@ -2,7 +2,6 @@ import logging
 import sys
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from config import TOKEN, PORT, HEROKU_APP_NAME, MODE
-import requests
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -11,10 +10,10 @@ logger = logging.getLogger()
 
 if MODE == "prod":
     def run():
+        updater = Updater(TOKEN, use_context=True)
         updater.start_webhook(listen="0.0.0.0",
                                 port=PORT,
                                 url_path=TOKEN)
-        updater = Updater(TOKEN, use_context=True)
 
         updater.dispatcher.add_handler(CommandHandler("start", start))
         updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
@@ -22,6 +21,7 @@ if MODE == "prod":
         updater.bot.set_webhook("https://{}.herokuapp.com/{}".format(HEROKU_APP_NAME, TOKEN))
 else:
     def run():
+        import requests
         get_request = requests.get('http://pubproxy.com/api/proxy?limit=1&'
                                'format=txt&port=8080&level=anonymous&'
                                'type=socks5&country=FI|NO|US&https=True')
