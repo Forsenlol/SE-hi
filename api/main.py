@@ -1,4 +1,5 @@
 from pprint import pprint
+import time
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 import os
@@ -6,7 +7,16 @@ import json
 
 GOOGLE_API_TOKEN = os.getenv("GOOGLE_API_TOKEN")
 
-def main():
+# Функция для поиска индекса последнего вхождения значения val в список
+def rindex(lst, val):
+    try:
+        i = lst[::-1].index(val, 0, len(lst))
+        return i
+    except ValueError:
+        return -1
+
+
+def get_api(telegram_log):
     scope = ["https://spreadsheets.google.com/feeds",
              'https://www.googleapis.com/auth/spreadsheets',
              "https://www.googleapis.com/auth/drive.file",
@@ -18,19 +28,21 @@ def main():
 
     data = sheet.get_all_records()
 
-    number_row = 3
     number_col = 2
-
-    row = sheet.row_values(number_row)
     col = sheet.col_values(number_col)
-    cell = sheet.cell(number_row, number_col).value
+    user_responses = len(col) - rindex(col, telegram_log)
+    while rindex(col, telegram_log) == -1:
+        time.sleep(5)
+        col = sheet.col_values(number_col)
+        user_responses = len(col) - rindex(col, telegram_log)
+    # cell = sheet.cell(number_row, number_col).value
+    row = sheet.row_values(user_responses)
+    pprint(row[2:])
+    # pprint(data)
 
-    pprint(data)
-    pprint(row)
-    pprint(col)
-    pprint(cell)
+    # Тут что то происходит
 
 
 if __name__ == "__main__":
-    main()
+    get_api('bot6')
 
