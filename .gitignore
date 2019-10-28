@@ -1,2 +1,8 @@
 .vscode/
 __pycache__/
+.DS_Store
+.ipynb_checkpoints/
+datasets/au_photos/.DS_Store
+datasets/au_photos/.ipynb_checkpoints/
+datasets/csc_photos/.ipynb_checkpoints/
+datasets/itmo_photos/.ipynb_checkpoints/
