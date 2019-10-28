@@ -7,6 +7,10 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger()
 
+all_users = {}
+
+def get_api(username):
+    ...
 
 if MODE == "prod":
     def run():
@@ -34,8 +38,20 @@ else:
 
 
 def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='Hi! I\'m SE-Hi bot')
+    chat_id = update.effective_chat.id
+    username = update.effective_user.name
+    if chat_id not in all_users:
+        all_users[chat_id] = username
+
+    start_text = (f'Привет {update.effective_user.first_name}! '
+                  'Данный бот поможет Вам понять, готовы ли Вы обучаться '
+                  'на магистерской программе Software Engineering в ИТМО. '
+                  f'Пройдите, пожалуйста, тест в Google Form по ссылке '
+                  'https://forms.gle/ezkmBjgpUwxFFtyg8')
+
+    get_api(username)
+    context.bot.send_message(chat_id=chat_id,
+                             text=start_text)
 
 
 def echo(update, context):
