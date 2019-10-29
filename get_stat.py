@@ -3,7 +3,7 @@ import ast
 
 
 def get_alumni_stat(alumni_id):
-    df = pd.read_csv('dataset.csv')
+    df = pd.read_csv('data/dataset.csv')
 
     place = df.place[alumni_id]
 
@@ -21,7 +21,7 @@ def get_alumni_stat(alumni_id):
             output += f'Почитайте его отзыв про CSC: _{info}_'
     elif place == 'itmo':
         info = df.iloc[alumni_id].info.split(':')[-1]
-        output = (f'Вы выглядите, как выпускник магистерской программы ИТМО ' 
+        output = (f'Вы выглядите, как выпускник магистерской программы ИТМО '
                   f'Software Engineering *{df.name[alumni_id]}*. \n')
         output += f'Его тема диплома:{info}'
 
