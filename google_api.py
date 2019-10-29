@@ -1,13 +1,13 @@
+from face_rec import face_rec
+from graphs import graphs
+from config import MODE, GOOGLE_API_TOKEN, TABLE_NAME
+from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime, timedelta
 import time
 import gspread
 import os
 import logging
 import json
-from graphs import graphs
-from config import MODE, GOOGLE_API_TOKEN, TABLE_NAME
-from oauth2client.service_account import ServiceAccountCredentials
-from datetime import datetime, timedelta
-
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -17,12 +17,15 @@ USER_NAME_COL_NUM = 2
 TIME_COL_NUM = 1
 
 # Функция для поиска индекса последнего вхождения значения val в список
+
+
 def rindex(lst, val):
     try:
         i = lst[::-1].index(val, 0, len(lst))
         return i
     except ValueError:
         return -1
+
 
 def result_return(d, otvety, otvety_name, poshalky):
     comment = []
@@ -41,13 +44,12 @@ def result_return(d, otvety, otvety_name, poshalky):
     return comment_poshalky, comment
 
 
-
 def dictionary():
-    d = {'Комбинаторика': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:','https://stepik.org/course/91/syllabus', 'https://stepik.org/course/125/promo'],
-         'Теорвер': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:','https://stepik.org/course/3089/syllabus', 'https://www.coursera.org/browse/data-science/probability-and-statistics'],
-         'Матанализ': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:','https://stepik.org/course/716/syllabus', 'https://stepik.org/course/711/promo'],
-         'Линейная Алгебра': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:','https://www.coursera.org/learn/algebra-lineynaya', 'https://stepik.org/course/2461/promo'],
-         'Алгоритмы': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:','https://stepik.org/course/217/promo', 'https://www.coursera.org/browse/computer-science/algorithms'],
+    d = {'Комбинаторика': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:', 'https://stepik.org/course/91/syllabus', 'https://stepik.org/course/125/promo'],
+         'Теорвер': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:', 'https://stepik.org/course/3089/syllabus', 'https://www.coursera.org/browse/data-science/probability-and-statistics'],
+         'Матанализ': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:', 'https://stepik.org/course/716/syllabus', 'https://stepik.org/course/711/promo'],
+         'Линейная Алгебра': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:', 'https://www.coursera.org/learn/algebra-lineynaya', 'https://stepik.org/course/2461/promo'],
+         'Алгоритмы': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:', 'https://stepik.org/course/217/promo', 'https://www.coursera.org/browse/computer-science/algorithms'],
          'time': 'Будьте готовы к тому, что из-за высокой интенсивности обучения, Вам придется спать намного меньше :)',
          'Job': 'На нашем направлении слишком активная студенческая жизнь в плане учебы, поэтому Вам навряд ли удастся совмещать обучение с работой.',
          'Deadlines': 'Будьте готовы к тому, что Вы столкнетесь с большими проблемами, так как каждый день Вам будет необходимо делать новую задачку, и если они вдруг накопятся....',
@@ -132,17 +134,18 @@ def get_api(telegram_login, date_telegram_login):
     logger.info(
         f"Waiting for {telegram_login} form submission at {date_telegram_login}")
 
-    while rindex(user_col, telegram_login) == -1:# or date_time_sheet < date_telegram_login:
+    while rindex(user_col, telegram_login) == -1 or date_time_sheet < date_telegram_login:
         time.sleep(5)
         date_time_sheet = get_time(sheet, TIME_COL_NUM, user_responses)
         user_col = sheet.col_values(USER_NAME_COL_NUM)
         user_responses = get_user_responses(
             sheet, user_col, telegram_login)
-            
+
     row = sheet.row_values(user_responses + 1)
     igory, pashalki = result(row)
-    pashalki_, comments_ = result_return(dictionary(), igory[0], igory[1], pashalki)
-    
+    pashalki_, comments_ = result_return(
+        dictionary(), igory[0], igory[1], pashalki)
+
     pic_name = str(date_telegram_login) + telegram_login + '.png'
     graphs(pic_name, igory[0], igory[1])
 

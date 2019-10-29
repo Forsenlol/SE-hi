@@ -1,11 +1,12 @@
+import os
+import re
+import face_recognition as FC
+from PIL import Image
+import cv2
+from glob import glob
+
 def face_rec(paths = ['au_photos', 'csc_photos', 'itmo_photos'],
             user_photo_path = "/home/robez/Desktop/me.jpg"):
-    import os
-    import re
-    import face_recognition as FC
-    from PIL import Image
-    import cv2
-    from glob import glob
     
     img_lst = []
 

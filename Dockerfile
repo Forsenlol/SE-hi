@@ -6,4 +6,4 @@ WORKDIR /app
 RUN pip install -r requirements.txt
 ADD . /app
 
-CMD python /app/bot/bot.py
+CMD python /app/bot.py

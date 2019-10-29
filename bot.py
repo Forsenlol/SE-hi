@@ -5,7 +5,6 @@ from telegram.ext import run_async, Updater, CommandHandler, MessageHandler, \
     Filters
 from telegram import ParseMode
 from config import TOKEN, PORT, HEROKU_APP_NAME, MODE, GOOGLE_FORM_URL
-from multiprocessing import Process
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

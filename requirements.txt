@@ -1,3 +1,6 @@
+opencv-python==4.1.1.26
+PIL==1.1.6
+face_recognition==1.2.3
 astroid==2.3.2
 autopep8==1.4.4
 certifi==2019.9.11
