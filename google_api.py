@@ -154,7 +154,7 @@ def get_api(telegram_login, date_telegram_login):
         f"Waiting for {telegram_login} form submission at "
         f"{date_telegram_login}")
 
-    while user_responses == -1: #or date_time_sheet < date_telegram_login:
+    while user_responses == -1 or date_time_sheet < date_telegram_login:
         time.sleep(5)
         date_time_sheet = get_time(sheet, TIME_COL_NUM, user_responses)
         user_col = sheet.col_values(USER_NAME_COL_NUM)
@@ -170,13 +170,13 @@ def get_api(telegram_login, date_telegram_login):
         f"Drawing picture for {telegram_login} form submission at "
         f"{date_telegram_login}")
 
-    graphs(image_path(date_telegram_login, telegram_login),
-           result_for_graphix[0], result_for_graphix[1])
+    path = image_path(date_telegram_login, telegram_login)
+    graphs(path, result_for_graphix[0], result_for_graphix[1])
 
     logger.info(
         f"Got it for {telegram_login} form submission at {date_telegram_login}"
     )
-    return image_path, general_recommendations, study_recommendations
+    return path, general_recommendations, study_recommendations
 
 
 if __name__ == "__main__":
