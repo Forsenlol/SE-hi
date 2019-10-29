@@ -52,7 +52,15 @@ def face_rec(paths = ['au_photos', 'csc_photos', 'itmo_photos'],
 
     for i in img_lst:
 
-        unk_person_name = re.search('(?<=[\/]).*(?=[\.]png)',i).group()
+        # unk_person_name = re.search('(?<=[\/]).*(?=[\.]png)',i).group()
+        # если фотки в формате png
+        temp = os.path.basename(i)
+        if temp.endswith(".png"):
+            unk_person_name = os.path.basename(i)[:-4]
+        # если в .jpeg
+        else:
+            unk_person_name = os.path.basename(i)[:-5]
+        
 
         compare_image = CompareImage(user_photo_path, i)
         img_diff = compare_image.compare_image()
