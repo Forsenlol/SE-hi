@@ -4,11 +4,17 @@ from google_api import get_api
 from telegram.ext import run_async, Updater, CommandHandler, MessageHandler, \
     Filters
 from telegram import ParseMode
+from get_stat import get_alumni_stat
 from config import TOKEN, PORT, HEROKU_APP_NAME, MODE, GOOGLE_FORM_URL
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger()
+
+def handlers(updater):
+    updater.dispatcher.add_handler(CommandHandler("start", start))
+    updater.dispatcher.add_handler(MessageHandler(Filters.photo |
+                                                  Filters.text, echo))
 
 
 if MODE == "prod":
@@ -18,8 +24,7 @@ if MODE == "prod":
                               port=PORT,
                               url_path=TOKEN)
 
-        updater.dispatcher.add_handler(CommandHandler("start", start))
-        updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
+        handlers(updater)
 
         updater.bot.set_webhook(
             "https://{}.herokuapp.com/{}".format(HEROKU_APP_NAME, TOKEN))
@@ -36,8 +41,8 @@ elif MODE == "dev":
         #                   'proxy_url': f'https://{get_request.text}'})
         updater = Updater(TOKEN, use_context=True, request_kwargs={
             'proxy_url': f'https://157.245.56.246:8080'})
-        updater.dispatcher.add_handler(CommandHandler("start", start))
-        updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
+
+        handlers(updater)
 
         updater.start_polling()
 else:
@@ -74,9 +79,29 @@ def start(update, context):
 
 
 def echo(update, context):
-    response = update.message.text
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             text=response)
+    logger.info(
+        f"Waiting for echo function for {update.effective_user.name}")
+    chat_id = update.effective_chat.id
+
+    if len(update.message.photo) == 0:
+        response = ('Напишите боту /start или загрузите свою фотографию, '
+                    'чтобы посмотреть на кого из наших выпускников Вы похожи.')
+    else:
+        file_id = update.message.photo[-1].file_id
+        file_info = context.bot.get_file(file_id)
+        input_photo_name = f'{update.effective_chat.id}_face_rec.png'
+        file_info.download(input_photo_name)
+        pic_name, alumni_id = face_rec(input_photo_name)
+        response = get_alumni_stat(alumni_id)
+        context.bot.send_photo(chat_id=chat_id, photo=open(pic_name, "rb"))
+    context.bot.send_message(parse_mode=ParseMode.MARKDOWN,
+                             chat_id=chat_id, text=response)
+
+
+def face_rec(user_photo_path):
+    path = user_photo_path
+    idx = 100
+    return path, idx
 
 
 if __name__ == '__main__':

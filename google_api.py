@@ -1,4 +1,4 @@
-from face_rec import face_rec
+# from face_rec import face_rec
 from graphs import graphs
 from config import MODE, GOOGLE_API_TOKEN, TABLE_NAME
 from oauth2client.service_account import ServiceAccountCredentials
