@@ -64,8 +64,14 @@ def start(update, context):
                              chat_id=chat_id,
                              text=start_text)
 
-    data = get_api(username, update.effective_message.date)
-    context.bot.send_message(chat_id=chat_id, text=data)
+    pic_name, pashalki, comments = get_api(
+        username, update.effective_message.date)
+    pashalki_text = '\n'.join(pashalki)
+    comments_text = '\n'.join(comments)
+
+    context.bot.send_photo(chat_id=chat_id, photo=open(pic_name, "rb"))
+    context.bot.send_message(chat_id=chat_id, text=pashalki_text)
+    context.bot.send_message(chat_id=chat_id, text=comments_text)
 
 
 def echo(update, context):
