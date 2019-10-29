@@ -53,6 +53,7 @@ else:
 
 
 all_users = {}
+
 @run_async
 def start(update, context):
     chat_id = update.effective_chat.id
@@ -83,9 +84,11 @@ def start(update, context):
 def echo(update, context):
     logger.info(
         f"Waiting for echo function for {update.effective_user.name}")
+
     chat_id = update.effective_chat.id
 
     if len(update.message.photo) == 0:
+        context.bot.send_sticker(chat_id=chat_id, sticker='http://b.webpurr.com/anY5.webp')
         response = ('Напишите боту /start или загрузите свою фотографию, '
                     'чтобы посмотреть на кого из наших выпускников Вы похожи.')
     else:
@@ -96,15 +99,10 @@ def echo(update, context):
 
         pic_name, alumni_id = face_rec(input_photo_name)
         response = get_alumni_stat(alumni_id)
+        context.bot.send_sticker(chat_id=chat_id, sticker='http://b.webpurr.com/dyDz.webp')
         context.bot.send_photo(chat_id=chat_id, photo=open(''.join(PHOTO_PATH) + pic_name, "rb"))
     context.bot.send_message(parse_mode=ParseMode.MARKDOWN,
                              chat_id=chat_id, text=response)
-
-
-# def face_rec(user_photo_path):
-#     path = user_photo_path
-#     idx = 100
-#     return path, idx
 
 
 if __name__ == '__main__':
