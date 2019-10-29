@@ -1,6 +1,6 @@
 import logging
 import sys
-from google_api import get_api, get_all_users
+from google_api import get_api
 from telegram.ext import run_async, Updater, CommandHandler, MessageHandler, \
     Filters
 from telegram import ParseMode
@@ -36,7 +36,7 @@ elif MODE == "dev":
         # updater = Updater(TOKEN, use_context=True, request_kwargs={
         #                   'proxy_url': f'https://{get_request.text}'})
         updater = Updater(TOKEN, use_context=True, request_kwargs={
-                            'proxy_url': f'https://157.245.56.246:8080'})
+            'proxy_url': f'https://157.245.56.246:8080'})
         updater.dispatcher.add_handler(CommandHandler("start", start))
         updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
 
@@ -50,7 +50,7 @@ all_users = {}
 @run_async
 def start(update, context):
     chat_id = update.effective_chat.id
-    username = update.effective_user.name[1:] # Without @
+    username = update.effective_user.name[1:]  # Without @
     if chat_id not in all_users:
         all_users[chat_id] = username
 
@@ -58,7 +58,7 @@ def start(update, context):
                   'Данный бот поможет Вам понять, готовы ли Вы обучаться '
                   'на магистерской программе *Software Engineering* в ИТМО. '
                   f'Пройдите, пожалуйста, тест в '
-                  f'[Google Form]({GOOGLE_FORM_URL}?entry.1107499763={username}).')
+                  f'[Google Form]({GOOGLE_FORM_URL}?entry.182475645={username}).')
 
     context.bot.send_message(parse_mode=ParseMode.MARKDOWN,
                              chat_id=chat_id,
