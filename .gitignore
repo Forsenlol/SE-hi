@@ -5,3 +5,4 @@ __pycache__/
 datasets/
 envvars.sh
 .idea/
+get_alumni_stat.ipynb
