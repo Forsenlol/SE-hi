@@ -7,12 +7,12 @@ from glob import glob
 
 def face_rec(paths = ['au_photos', 'csc_photos', 'itmo_photos'],
             user_photo_path = "/home/robez/Desktop/me.jpg"):
-    
+
     img_lst = []
 
-    for path in paths: 
+    for path in paths:
         img_lst.extend(glob(os.path.join(path, "*")))
-        
+
     class CompareImage(object):
 
         def __init__(self, image_1_path, image_2_path):
@@ -45,8 +45,8 @@ def face_rec(paths = ['au_photos', 'csc_photos', 'itmo_photos'],
             # а 90% - метод сопоставления с образцом
             commutative_image_diff = (img_hist_diff / 10) + img_template_diff
             return commutative_image_diff
-    
-    
+
+
     user_face_match = {}
 
     user_name = "user"
@@ -61,11 +61,11 @@ def face_rec(paths = ['au_photos', 'csc_photos', 'itmo_photos'],
         # если в .jpeg
         else:
             unk_person_name = os.path.basename(i)[:-5]
-        
+
 
         compare_image = CompareImage(user_photo_path, i)
         img_diff = compare_image.compare_image()
-        
+
         if img_diff == False:
             continue
         else:
@@ -77,19 +77,19 @@ def face_rec(paths = ['au_photos', 'csc_photos', 'itmo_photos'],
                     user_face_match[user_name].append(new_value)
                 else:
                     user_face_match[user_name] = [new_value]
-                    
+
     # сортировка по матчингу от 0 до 1
-    for k,v in user_face_match.items():
-        v.sort(key = lambda x: x[1], reverse = True)
+    for k, v in user_face_match.items():
+        v.sort(key=lambda x: x[1], reverse=True)
         v = v[0]
-        
+
     user_match = v[0]
-    
+    return user_match
     # и найти соответсвующую картинку и показать
     # откроется только 1 картинка фиксированно
-    for path in paths:
-        try:
-            x = Image.open(os.path.join(path, user_match + ".png"))
-            return user_match, x.show()
-        except:
-            continue
+    # for path in paths:
+    #     try:
+    #         x = Image.open(os.path.join(path, user_match + ".png"))
+    #         return user_match, x.show()
+    #     except:
+    #         continue
