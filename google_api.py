@@ -1,10 +1,9 @@
 import time
 import gspread
-import os
 import logging
 import json
 from graphs import graphs
-from config import MODE, GOOGLE_API_TOKEN, TABLE_NAME
+from config import MODE, GOOGLE_API_TOKEN, TABLE_NAME, image_path
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime, timedelta
 
@@ -52,22 +51,13 @@ def return_comments_for_user(d, result_answers, result_name, poshalky):
 # Функция содержит словарь: ключ - тема, значение - список рекомендаций
 # Функция возвращет словарь
 def dictionary():
-    d = {'Комбинаторика': [
-        'Для более успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:',
-        'https://stepik.org/course/91/syllabus', 'https://stepik.org/course/125/promo'],
-         'Теорвер': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:',
-                     'https://stepik.org/course/3089/syllabus',
-                     'https://www.coursera.org/browse/data-science/probability-and-statistics'],
-         'Матанализ': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:',
-                       'https://stepik.org/course/716/syllabus', 'https://stepik.org/course/711/promo'],
-         'Линейная Алгебра': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:',
-                              'https://www.coursera.org/learn/algebra-lineynaya',
-                              'https://stepik.org/course/2461/promo'],
-         'Алгоритмы': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с данными курсами:',
-                       'https://stepik.org/course/217/promo',
-                       'https://www.coursera.org/browse/computer-science/algorithms'],
+    d = {'Комбинаторика': ['Для более успешной сдачи вступительных испытаний советуем вам ознакомиться с курсами по Комбинаторике:', 'https://stepik.org/course/91/syllabus', 'https://stepik.org/course/125/promo'],
+         'Теорвер': ['Для более успешной сдачи вступительных испытаний советуем вам ознакомиться с курсами по ТеорВеру:', 'https://stepik.org/course/3089/syllabus', 'https://www.coursera.org/browse/data-science/probability-and-statistics'],
+         'Матанализ': ['Для более успешной сдачи вступительных испытаний советуем вам ознакомиться с курсами по Матанализу:', 'https://stepik.org/course/716/syllabus', 'https://stepik.org/course/711/promo'],
+         'Линейная Алгебра': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с курсами по Линейной алгебре:', 'https://www.coursera.org/learn/algebra-lineynaya', 'https://stepik.org/course/2461/promo'],
+         'Алгоритмы': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с курсами по Алгоритмам и структурам данных:', 'https://stepik.org/course/217/promo', 'https://www.coursera.org/browse/computer-science/algorithms'],
          'time': 'Будьте готовы к тому, что из-за высокой интенсивности обучения, Вам придется спать намного меньше :)',
-         'job': 'На нашем направлении слишком активная студенческая жизнь в плане учебы, поэтому Вам навряд ли удастся совмещать обучение с работой.',
+         'job': 'На нашем направлении слишком активная студенческая жизнь в плане учебы, поэтому Вам НЕ удастся совмещать обучение с работой.',
          'Deadlines': 'Будьте готовы к тому, что Вы столкнетесь с большими проблемами, так как каждый день Вам будет необходимо делать новую задачку, и если они вдруг накопятся....',
          'Лапки': 'Домашние работы на нашем направлении сложнее в 10 раз.'}
     return d
@@ -157,14 +147,14 @@ def get_api(telegram_login, date_telegram_login):
     sheet = get_sheet()
 
     user_col = sheet.col_values(USER_NAME_COL_NUM)
-    user_responses = get_user_responses(user_col, telegram_login)
+    user_responses = get_user_responses(sheet, user_col, telegram_login)
     date_time_sheet = get_time(sheet, TIME_COL_NUM, user_responses)
 
     logger.info(
         f"Waiting for {telegram_login} form submission at "
         f"{date_telegram_login}")
 
-    while user_responses == -1 or date_time_sheet < date_telegram_login:
+    while user_responses == -1: #or date_time_sheet < date_telegram_login:
         time.sleep(5)
         date_time_sheet = get_time(sheet, TIME_COL_NUM, user_responses)
         user_col = sheet.col_values(USER_NAME_COL_NUM)
@@ -176,15 +166,18 @@ def get_api(telegram_login, date_telegram_login):
     general_recommendations, study_recommendations = \
         return_comments_for_user(dictionary(), result_for_graphix[0],
                                  result_for_graphix[1], comment_for_user)
+    logger.info(
+        f"Drawing picture for {telegram_login} form submission at "
+        f"{date_telegram_login}")
 
-    pic_name = str(date_telegram_login) + telegram_login + '.png'
-    graphs(pic_name, result_for_graphix[0], result_for_graphix[1])
+    graphs(image_path(date_telegram_login, telegram_login),
+           result_for_graphix[0], result_for_graphix[1])
 
     logger.info(
         f"Got it for {telegram_login} form submission at {date_telegram_login}"
     )
-    return pic_name, general_recommendations, study_recommendations
+    return image_path, general_recommendations, study_recommendations
 
 
 if __name__ == "__main__":
-    get_api('', datetime.today())
+    get_api('forsenlol1', datetime.fromtimestamp(time.mktime(time.gmtime(1000000))))

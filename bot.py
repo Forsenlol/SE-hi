@@ -1,11 +1,13 @@
 import logging
-import sys
 from google_api import get_api
 from telegram.ext import run_async, Updater, CommandHandler, MessageHandler, \
     Filters
 from telegram import ParseMode
 from get_stat import get_alumni_stat
-from config import TOKEN, PORT, HEROKU_APP_NAME, MODE, GOOGLE_FORM_URL
+from config import TOKEN, PORT, HEROKU_APP_NAME, MODE, GOOGLE_FORM_URL, image_path
+from face_rec import face_rec
+from config import PHOTO_PATH
+
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -89,19 +91,20 @@ def echo(update, context):
     else:
         file_id = update.message.photo[-1].file_id
         file_info = context.bot.get_file(file_id)
-        input_photo_name = f'{update.effective_chat.id}_face_rec.png'
+        input_photo_name = 'face_rec_' + image_path(update.effective_message.date, update.effective_user.name[1:])
         file_info.download(input_photo_name)
+
         pic_name, alumni_id = face_rec(input_photo_name)
         response = get_alumni_stat(alumni_id)
-        context.bot.send_photo(chat_id=chat_id, photo=open(pic_name, "rb"))
+        context.bot.send_photo(chat_id=chat_id, photo=open(''.join(PHOTO_PATH) + pic_name, "rb"))
     context.bot.send_message(parse_mode=ParseMode.MARKDOWN,
                              chat_id=chat_id, text=response)
 
 
-def face_rec(user_photo_path):
-    path = user_photo_path
-    idx = 100
-    return path, idx
+# def face_rec(user_photo_path):
+#     path = user_photo_path
+#     idx = 100
+#     return path, idx
 
 
 if __name__ == '__main__':
