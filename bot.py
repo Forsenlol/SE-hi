@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger()
 
+
 def handlers(updater):
     updater.dispatcher.add_handler(CommandHandler("start", start))
     updater.dispatcher.add_handler(MessageHandler(Filters.photo |
@@ -25,11 +26,10 @@ if MODE == "prod":
         updater.start_webhook(listen="0.0.0.0",
                               port=PORT,
                               url_path=TOKEN)
-
         handlers(updater)
-
         updater.bot.set_webhook(
             "https://{}.herokuapp.com/{}".format(HEROKU_APP_NAME, TOKEN))
+
 elif MODE == "dev":
     def run():
         import requests
@@ -43,10 +43,9 @@ elif MODE == "dev":
         #                   'proxy_url': f'https://{get_request.text}'})
         updater = Updater(TOKEN, use_context=True, request_kwargs={
             'proxy_url': f'https://157.245.56.246:8080'})
-
         handlers(updater)
-
         updater.start_polling()
+
 else:
     logger.error('No MODE specified')
     exit(1)
@@ -54,8 +53,11 @@ else:
 
 all_users = {}
 
+
 @run_async
 def start(update, context):
+    logger.info(
+        f"Starting char with {update.effective_user.name} at {update.effective_message.date}")
     chat_id = update.effective_chat.id
     username = update.effective_user.name[1:]  # Without @
     if chat_id not in all_users:
@@ -79,28 +81,42 @@ def start(update, context):
     context.bot.send_photo(chat_id=chat_id, photo=open(pic_name, "rb"))
     context.bot.send_message(chat_id=chat_id, text=pashalki_text)
     context.bot.send_message(chat_id=chat_id, text=comments_text)
-
+    
+    logger.info(
+        f"Start ready for {update.effective_user.name} at {update.effective_message.date}")
 
 def echo(update, context):
     logger.info(
-        f"Waiting for echo function for {update.effective_user.name}")
+        f"Waiting for echo function for {update.effective_user.name} at {update.effective_message.date}")
     chat_id = update.effective_chat.id
 
     if len(update.message.photo) == 0:
+        context.bot.send_sticker(
+            chat_id=chat_id, sticker='http://b.webpurr.com/anY5.webp')
         response = ('Напишите боту /start или загрузите свою фотографию, '
-                    'чтобы посмотреть на кого из наших выпускников Вы похожи.')
+                    'чтобы посмотреть на кого из наших выпускников Вы похожи больше всего.')
     else:
-        context.bot.send_sticker(chat_id=chat_id, sticker='http://b.webpurr.com/dyDz.webp')
+        context.bot.send_sticker(
+            chat_id=chat_id, sticker='http://b.webpurr.com/dyDz.webp')
+
         file_id = update.message.photo[-1].file_id
         file_info = context.bot.get_file(file_id)
-        input_photo_name = 'face_rec_' + image_path(update.effective_message.date, update.effective_user.name[1:])
+        input_photo_name = 'face_rec_' + \
+            image_path(update.effective_message.date,
+                       update.effective_user.name[1:])
         file_info.download(input_photo_name)
 
+        logger.info(
+            f"Waiting face recognition for {update.effective_user.name} at {update.effective_message.date}")
         pic_name, alumni_id = face_rec(input_photo_name)
         response = get_alumni_stat(alumni_id)
-        context.bot.send_photo(chat_id=chat_id, photo=open(''.join(PHOTO_PATH) + pic_name, "rb"))
+        context.bot.send_photo(chat_id=chat_id, photo=open(
+            ''.join(PHOTO_PATH) + pic_name, "rb"))
+
     context.bot.send_message(parse_mode=ParseMode.MARKDOWN,
                              chat_id=chat_id, text=response)
+    logger.info(
+        f"Echo ready for {update.effective_user.name} at {update.effective_message.date}")
 
 
 if __name__ == '__main__':
