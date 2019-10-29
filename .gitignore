@@ -2,6 +2,6 @@
 __pycache__/
 .DS_Store
 .ipynb_checkpoints/
-datasets/
 envvars.sh
 .idea/
+get_alumni_stat.ipynb
