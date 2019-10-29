@@ -75,13 +75,21 @@ def start(update, context):
 
     pic_name, pashalki, comments = get_api(
         username, update.effective_message.date)
-    pashalki_text = '\n'.join(pashalki)
+
+    pre_pashalki = ('*Почитайте наши рекомендации, основанные на Ваших ответах '
+                    'на общие вопросы:*')
+
     comments_text = '\n'.join(comments)
 
     context.bot.send_photo(chat_id=chat_id, photo=open(pic_name, "rb"))
-    context.bot.send_message(chat_id=chat_id, text=pashalki_text)
-    context.bot.send_message(chat_id=chat_id, text=comments_text)
-    
+    context.bot.send_message(parse_mode=ParseMode.MARKDOWN,
+                             chat_id=chat_id, text=pre_pashalki)
+    for recommendation in pashalki:
+        context.bot.send_message(parse_mode=ParseMode.MARKDOWN,
+                                 chat_id=chat_id, text=recommendation)
+    context.bot.send_message(parse_mode=ParseMode.MARKDOWN,
+                             chat_id=chat_id, text=comments_text)
+
     logger.info(
         f"Start ready for {update.effective_user.name} at {update.effective_message.date}")
 

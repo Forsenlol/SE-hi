@@ -2,6 +2,7 @@ astroid==2.3.2
 autopep8==1.4.4
 certifi==2019.9.11
 cffi==1.13.1
+chart-studio==1.0.0
 chardet==3.0.4
 cryptography==2.8
 cycler==0.10.0
