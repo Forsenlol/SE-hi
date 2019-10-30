@@ -127,16 +127,20 @@ def echo(update, context):
 
         file_id = update.message.photo[-1].file_id
         file_info = context.bot.get_file(file_id)
-        input_photo_name = 'face_rec_' + \
-            image_path(date, update.effective_user.name[1:])
-        file_info.download(input_photo_name)
+        try:
+            input_photo_name = 'face_rec_' + \
+                image_path(date, update.effective_user.name[1:])
+            file_info.download(input_photo_name)
 
-        logger.info(
-            f"Awaiting face recognition for {update.effective_user.name} at {date}")
-        pic_name, alumni_id = face_rec(input_photo_name)
-        response = get_alumni_stat(alumni_id)
-        context.bot.send_photo(chat_id=chat_id, photo=open(
-            ''.join(PHOTO_PATH) + pic_name, "rb"))
+            logger.info(
+                f"Awaiting face recognition for {update.effective_user.name} at {date}")
+            pic_name, alumni_id = face_rec(input_photo_name)
+            response = get_alumni_stat(alumni_id)
+            context.bot.send_photo(chat_id=chat_id, photo=open(
+                ''.join(PHOTO_PATH) + pic_name, "rb"))
+        finally:
+            import os
+            os.remove(input_photo_name) # Hundred percent anonymity
 
     context.bot.send_message(parse_mode=ParseMode.MARKDOWN,
                              chat_id=chat_id, text=response)
