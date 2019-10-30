@@ -73,8 +73,19 @@ def start(update, context):
                              chat_id=chat_id,
                              text=start_text)
 
-    pic_name, pashalki, comments = get_api(
-        username, update.effective_message.date)
+    try:
+        pic_name, pashalki, comments = get_api(
+            username, update.effective_message.date)
+    except TimeoutError as te:
+        context.bot.send_message(chat_id=chat_id, text=str(te))
+        logger.info(
+            f"User {update.effective_user.name} at {update.effective_message.date} doesn't finish test")
+        return
+    except InterruptedError as be:
+        context.bot.send_message(chat_id=chat_id, text=str(be))
+        logger.info(
+            f"User {update.effective_user.name} at {update.effective_message.date} got now time")
+        return
 
     pre_pashalki = ('*Почитайте наши рекомендации, основанные на Ваших ответах '
                     'на общие вопросы:*')
@@ -92,6 +103,7 @@ def start(update, context):
 
     logger.info(
         f"Start ready for {update.effective_user.name} at {update.effective_message.date}")
+
 
 def echo(update, context):
     logger.info(

@@ -55,14 +55,14 @@ def dictionary():
                            '\n1. [Ликбез по дискретной математике](https://stepik.org/course/91/syllabus)',
                            '2. [Основы перечислительной комбинаторики](https://stepik.org/course/125/promo)\n'],
          'Теорвер': ['Для комфортного обучения в нашей магистратуре Вам следует подтянуть *ТеорВер*. Вот наши рекомендации: ',
-                    '\n1. [Теория вероятностей](https://stepik.org/course/3089/syllabus)',
-                    '2. [Теория вероятности и статистика](https://www.coursera.org/browse/data-science/probability-and-statistics)\n'],
+                     '\n1. [Теория вероятностей](https://stepik.org/course/3089/syllabus)',
+                     '2. [Теория вероятности и статистика](https://www.coursera.org/browse/data-science/probability-and-statistics)\n'],
          'Матанализ': ['Чтобы подтянуть *Матанализ*, советуем изучить эти ресурсы:',
                        '\n1. [Математический анализ (часть 1)](https://stepik.org/course/716/syllabus)',
                        '2. [Математический анализ (часть 2)](https://stepik.org/course/711/promo)\n'],
          'Линейная Алгебра': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с курсами по *Линейной алгебре*:',
-                        '\n1. [Линейная алгебра (Linear Algebra)](https://www.coursera.org/learn/algebra-lineynaya)',
-                        '2. [Линейная алгебра](https://stepik.org/course/2461/promo)\n'],
+                              '\n1. [Линейная алгебра (Linear Algebra)](https://www.coursera.org/learn/algebra-lineynaya)',
+                              '2. [Линейная алгебра](https://stepik.org/course/2461/promo)\n'],
          'Алгоритмы': ['Мы оооочень рекомендуем Вам внимательно изучить данные курсы по *Алгоритмам и структурам данных*: ',
                        '\n1. [Алгоритмы: теория и практика. Методы](https://stepik.org/course/217/promo)',
                        '2. [Алгоритмы](https://www.coursera.org/browse/computer-science/algorithms)\n'],
@@ -110,20 +110,16 @@ def result(row):
     return otvety, result_general_information
 
 
-def get_sheet():
-    if not hasattr(get_sheet, 'sheet'):
-        scope = ["https://spreadsheets.google.com/feeds",
-                 'https://www.googleapis.com/auth/spreadsheets',
-                 "https://www.googleapis.com/auth/drive.file",
-                 "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(
-            json.loads(GOOGLE_API_TOKEN), scope)
-        logger.info("Getting credentials")
-
-        client = gspread.authorize(creds)
-        setattr(get_sheet, 'sheet', client.open(TABLE_NAME).sheet1)
-
-    return get_sheet.sheet
+class GoogleApiSheet:
+    scope = ["https://spreadsheets.google.com/feeds",
+                    'https://www.googleapis.com/auth/spreadsheets',
+                    "https://www.googleapis.com/auth/drive.file",
+                    "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(
+        json.loads(GOOGLE_API_TOKEN), scope)
+    logger.info("Getting credentials")
+    client = gspread.authorize(creds)
+    sheet = client.open(TABLE_NAME).sheet1
 
 
 # Функция возвращает индекс строки ответов из Google Sheets
@@ -150,11 +146,20 @@ def get_time(sheet, col_num, user_responses):
     return date_time_sheet
 
 
+USERS = 0
+
 # Функция получает данные из Google sheets и отправляет результаты в бота
 def get_api(telegram_login, date_telegram_login):
+    global USERS
+
+    if USERS >= 20:
+        raise InterruptedError(
+            "Пожалуйста, подождите, пока остальные пользователи дорешают тест")
+    USERS += 1
+
     date_telegram_login += timedelta(hours=3)
 
-    sheet = get_sheet()
+    sheet = GoogleApiSheet.sheet
 
     user_col = sheet.col_values(USER_NAME_COL_NUM)
     user_responses = get_user_responses(sheet, user_col, telegram_login)
@@ -164,12 +169,20 @@ def get_api(telegram_login, date_telegram_login):
         f"Waiting for {telegram_login} form submission at "
         f"{date_telegram_login}")
 
+    timer = 0
+    sleep_time = 5
     while user_responses == -1 or date_time_sheet < date_telegram_login:
-        time.sleep(5)
+        if timer > 90:
+            sleep_time = 30
+        elif timer > 150:
+            raise TimeoutError("Вы слишком долго бездействовали")
+
+        time.sleep(sleep_time)
         date_time_sheet = get_time(sheet, TIME_COL_NUM, user_responses)
         user_col = sheet.col_values(USER_NAME_COL_NUM)
         user_responses = get_user_responses(
             sheet, user_col, telegram_login)
+        timer += 1
 
     row = sheet.row_values(user_responses + 1)
     result_for_graphix, comment_for_user = result(row)
@@ -186,8 +199,12 @@ def get_api(telegram_login, date_telegram_login):
     logger.info(
         f"Got it for {telegram_login} form submission at {date_telegram_login}"
     )
+
+    USERS -= 1
+
     return path, general_recommendations, study_recommendations
 
 
 if __name__ == "__main__":
-    get_api('forsenlol1', datetime.fromtimestamp(time.mktime(time.gmtime(1000000))))
+    get_api('forsenlol1', datetime.fromtimestamp(
+        time.mktime(time.gmtime(1000000))))
