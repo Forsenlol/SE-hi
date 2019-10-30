@@ -5,7 +5,7 @@ import json
 from graphs import graphs
 from config import MODE, GOOGLE_API_TOKEN, TABLE_NAME, image_path
 from oauth2client.service_account import ServiceAccountCredentials
-from datetime import datetime, timedelta
+from datetime import datetime
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - '
@@ -51,19 +51,19 @@ def return_comments_for_user(d, result_answers, result_name, poshalky):
 # Функция содержит словарь: ключ - тема, значение - список рекомендаций
 # Функция возвращет словарь
 def dictionary():
-    d = {'Комбинаторика': ['Так как Вы набрали небольшое количество баллов в разделе *Комбинаторика*, мы советуем Вам обратить внимание на данные курсы: ',
+    d = {'КОМБ.': ['Так как Вы набрали небольшое количество баллов в разделе *Комбинаторика*, мы советуем Вам обратить внимание на данные курсы: ',
                            '\n1. [Ликбез по дискретной математике](https://stepik.org/course/91/syllabus)',
                            '2. [Основы перечислительной комбинаторики](https://stepik.org/course/125/promo)\n'],
-         'Теорвер': ['Для комфортного обучения в нашей магистратуре Вам следует подтянуть *ТеорВер*. Вот наши рекомендации: ',
+         'ТЕОРВЕР': ['Для комфортного обучения в нашей магистратуре Вам следует подтянуть *ТеорВер*. Вот наши рекомендации: ',
                      '\n1. [Теория вероятностей](https://stepik.org/course/3089/syllabus)',
                      '2. [Теория вероятности и статистика](https://www.coursera.org/browse/data-science/probability-and-statistics)\n'],
-         'Матанализ': ['Чтобы подтянуть *Матанализ*, советуем изучить эти ресурсы:',
+         'МАТАН': ['Чтобы подтянуть *Матанализ*, советуем изучить эти ресурсы:',
                        '\n1. [Математический анализ (часть 1)](https://stepik.org/course/716/syllabus)',
                        '2. [Математический анализ (часть 2)](https://stepik.org/course/711/promo)\n'],
-         'Линейная Алгебра': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с курсами по *Линейной алгебре*:',
+         'ЛИНАЛ': ['Для успешной сдачи вступительных испытаний советуем вам ознакомиться с курсами по *Линейной алгебре*:',
                               '\n1. [Линейная алгебра (Linear Algebra)](https://www.coursera.org/learn/algebra-lineynaya)',
                               '2. [Линейная алгебра](https://stepik.org/course/2461/promo)\n'],
-         'Алгоритмы': ['Мы оооочень рекомендуем Вам внимательно изучить данные курсы по *Алгоритмам и структурам данных*: ',
+         'АЛГОР.': ['Мы оооочень рекомендуем Вам внимательно изучить данные курсы по *Алгоритмам и структурам данных*: ',
                        '\n1. [Алгоритмы: теория и практика. Методы](https://stepik.org/course/217/promo)',
                        '2. [Алгоритмы](https://www.coursera.org/browse/computer-science/algorithms)\n'],
          'time': 'Будьте готовы к тому, что из-за высокой интенсивности обучения, Вам придется *спать намного меньше*, чем Вы привыкли спать сейчас :)',
@@ -85,8 +85,8 @@ def result(row):
     algos = [row[22:27], ['f3,f2,f4,f1', 'B', 'O(logn)', 'O(nlogn)', 'Нет']]
 
     # Наименования тем
-    result_name = ['Комбинаторика', 'Теорвер', 'Матанализ', 'Линейная Алгебра',
-                   'Алгоритмы']
+    result_name = ['КОМБ.', 'ТЕОРВЕР', 'МАТАН', 'ЛИНАЛ',
+                   'АЛГОР.']
     result_answers = [[komb], [teorver], [matanaliz], [lineyka], [algos]]
     otvety = [[], []]
 
@@ -112,9 +112,9 @@ def result(row):
 
 class GoogleApiSheet:
     scope = ["https://spreadsheets.google.com/feeds",
-                    'https://www.googleapis.com/auth/spreadsheets',
-                    "https://www.googleapis.com/auth/drive.file",
-                    "https://www.googleapis.com/auth/drive"]
+             'https://www.googleapis.com/auth/spreadsheets',
+             "https://www.googleapis.com/auth/drive.file",
+             "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(
         json.loads(GOOGLE_API_TOKEN), scope)
     logger.info("Getting credentials")
@@ -146,9 +146,10 @@ def get_time(sheet, col_num, user_responses):
     return date_time_sheet
 
 
+# Функция получает данные из Google sheets и отправляет результаты в бота
 USERS = 0
 
-# Функция получает данные из Google sheets и отправляет результаты в бота
+
 def get_api(telegram_login, date_telegram_login):
     global USERS
 
@@ -156,8 +157,7 @@ def get_api(telegram_login, date_telegram_login):
         raise InterruptedError(
             "Пожалуйста, подождите, пока остальные пользователи дорешают тест")
     USERS += 1
-
-    date_telegram_login += timedelta(hours=3)
+    logger.info(f"Current number of active google_api users: {USERS}")
 
     sheet = GoogleApiSheet.sheet
 
@@ -183,8 +183,8 @@ def get_api(telegram_login, date_telegram_login):
         user_responses = get_user_responses(
             sheet, user_col, telegram_login)
         timer += 1
-
     row = sheet.row_values(user_responses + 1)
+
     result_for_graphix, comment_for_user = result(row)
     general_recommendations, study_recommendations = \
         return_comments_for_user(dictionary(), result_for_graphix[0],
@@ -197,10 +197,11 @@ def get_api(telegram_login, date_telegram_login):
     graphs(path, result_for_graphix[0], result_for_graphix[1])
 
     logger.info(
-        f"Got it for {telegram_login} form submission at {date_telegram_login}"
+        f"Drawing ready for {telegram_login} form submission at {date_telegram_login}"
     )
 
     USERS -= 1
+    logger.info(f"Current number of active google_api users: {USERS}")
 
     return path, general_recommendations, study_recommendations
 

@@ -7,6 +7,7 @@ from get_stat import get_alumni_stat
 from config import TOKEN, PORT, HEROKU_APP_NAME, MODE, GOOGLE_FORM_URL, image_path
 from face_rec import face_rec
 from config import PHOTO_PATH
+from datetime import timedelta
 
 
 logging.basicConfig(level=logging.INFO,
@@ -33,16 +34,15 @@ if MODE == "prod":
 elif MODE == "dev":
     def run():
         import requests
-        get_request = requests.get('http://pubproxy.com/api/proxy?limit=1&'
-                                   'format=txt&port=8080&level=anonymous&'
-                                   'type=socks5&country=FI|NO|US&https=True')
+        # proxy = requests.get('http://pubproxy.com/api/proxy?limit=1&'
+        #                      'format=txt&port=8080&level=anonymous&'
+        #                      'type=socks5&country=FI|NO|US&https=True')
+        # proxy = f'https://{proxy.text}'
+        proxy = 'https://157.245.56.246:8080'
 
-        logger.info(f"Using proxy: {get_request.text}")
-        # Current working proxy: 157.245.56.246:8080
-        # updater = Updater(TOKEN, use_context=True, request_kwargs={
-        #                   'proxy_url': f'https://{get_request.text}'})
+        logger.info(f"Using proxy: {proxy}")
         updater = Updater(TOKEN, use_context=True, request_kwargs={
-            'proxy_url': f'https://157.245.56.246:8080'})
+                          'proxy_url': proxy})
         handlers(updater)
         updater.start_polling()
 
@@ -56,8 +56,11 @@ all_users = {}
 
 @run_async
 def start(update, context):
+
+    date = update.effective_message.date + timedelta(hours=3)  # MSK timezone
+
     logger.info(
-        f"Starting char with {update.effective_user.name} at {update.effective_message.date}")
+        f"Start function entered by {update.effective_user.name} at {date}")
     chat_id = update.effective_chat.id
     username = update.effective_user.name[1:]  # Without @
     if chat_id not in all_users:
@@ -74,17 +77,17 @@ def start(update, context):
                              text=start_text)
 
     try:
-        pic_name, pashalki, comments = get_api(
-            username, update.effective_message.date)
+        pic_name, pashalki, comments = get_api(username, date)
     except TimeoutError as te:
         context.bot.send_message(chat_id=chat_id, text=str(te))
         logger.info(
-            f"User {update.effective_user.name} at {update.effective_message.date} doesn't finish test")
+            f"User {update.effective_user.name} at {date} ran out of time")
         return
     except InterruptedError as be:
         context.bot.send_message(chat_id=chat_id, text=str(be))
         logger.info(
-            f"User {update.effective_user.name} at {update.effective_message.date} got now time")
+            f"User {update.effective_user.name} at {date} too many queries, \
+                can't communicate with google_api")
         return
 
     pre_pashalki = ('*Почитайте наши рекомендации, основанные на Ваших ответах '
@@ -102,12 +105,15 @@ def start(update, context):
                              chat_id=chat_id, text=comments_text)
 
     logger.info(
-        f"Start ready for {update.effective_user.name} at {update.effective_message.date}")
+        f"Have finished communication (start function) with {update.effective_user.name} at {date}")
 
 
 def echo(update, context):
+
+    date = update.effective_message.date + timedelta(hours=3)  # MSK timezone
+
     logger.info(
-        f"Waiting for echo function for {update.effective_user.name} at {update.effective_message.date}")
+        f"Waiting for echo function for {update.effective_user.name} at {date}")
     chat_id = update.effective_chat.id
 
     if len(update.message.photo) == 0:
@@ -122,12 +128,11 @@ def echo(update, context):
         file_id = update.message.photo[-1].file_id
         file_info = context.bot.get_file(file_id)
         input_photo_name = 'face_rec_' + \
-            image_path(update.effective_message.date,
-                       update.effective_user.name[1:])
+            image_path(date, update.effective_user.name[1:])
         file_info.download(input_photo_name)
 
         logger.info(
-            f"Waiting face recognition for {update.effective_user.name} at {update.effective_message.date}")
+            f"Awaiting face recognition for {update.effective_user.name} at {date}")
         pic_name, alumni_id = face_rec(input_photo_name)
         response = get_alumni_stat(alumni_id)
         context.bot.send_photo(chat_id=chat_id, photo=open(
@@ -136,7 +141,7 @@ def echo(update, context):
     context.bot.send_message(parse_mode=ParseMode.MARKDOWN,
                              chat_id=chat_id, text=response)
     logger.info(
-        f"Echo ready for {update.effective_user.name} at {update.effective_message.date}")
+        f"Have finished communication (echo function) with {update.effective_user.name} at {date}")
 
 
 if __name__ == '__main__':
